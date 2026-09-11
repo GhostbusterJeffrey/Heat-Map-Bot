@@ -1,0 +1,8 @@
+services:
+  tpr-terminal:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./assets:/app/assets:ro
+      - ./logs:/app/logs
