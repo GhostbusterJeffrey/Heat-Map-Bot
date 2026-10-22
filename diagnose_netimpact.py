@@ -13,7 +13,8 @@ def emit(check, **details):
 
 
 def main():
-    sys.path.insert(0, str(Path.cwd()))
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    emit("runtime", python=sys.executable, application_folder_present=(Path(__file__).resolve().parent / "tpr_terminal").is_dir())
     stage = "imports"
     try:
         from tpr_terminal.netimpact_config import NetImpactSettings
@@ -40,6 +41,8 @@ def main():
         emit("chart rendering", success=True, bytes=len(png))
     except Exception as exc:
         details = {"success": False, "stage": stage, "exception": type(exc).__name__}
+        if isinstance(exc, ModuleNotFoundError):
+            details["missing_module"] = exc.name
         # Only the provider's deliberately sanitized exception fields are exposed.
         if "TradierDataError" in locals() and isinstance(exc, TradierDataError):
             allowed = {"request_rejected", "timeout", "connection_failed", "invalid_response", "retry_limit", "missing_clock"}
