@@ -21,22 +21,26 @@ def main() -> None:
     token = getpass.getpass("Discord bot token: ").strip()
     if not token or token == "replace_me":
         raise SystemExit("A fresh Discord token is required.")
-    guild = ask("Discord server ID", "1403233674761211955")
-    role_id = ask("Elite role ID", "1477522254202933350")
+    guild = ask("Discord server ID")
+    role_id = ask("Elite role ID")
     role_name = ask("Elite role name", "Tier 2 Elite Member")
-    owner_id = ask("Owner Discord user ID", "763046553308364852")
+    owner_id = ask("Owner Discord user ID")
 
     template = TEMPLATE_PATH.read_text(encoding="utf-8")
-    replacements = {
-        "DISCORD_TOKEN=replace_me": f"DISCORD_TOKEN={token}",
-        "DEV_GUILD_ID=1403233674761211955": f"DEV_GUILD_ID={guild}",
-        "ELITE_ROLE_ID=1477522254202933350": f"ELITE_ROLE_ID={role_id}",
-        "ELITE_ROLE_NAME=Tier 2 Elite Member": f"ELITE_ROLE_NAME={role_name}",
-        "OWNER_USER_ID=763046553308364852": f"OWNER_USER_ID={owner_id}",
+    values = {
+        "DISCORD_TOKEN": token,
+        "DEV_GUILD_ID": guild,
+        "ELITE_ROLE_ID": role_id,
+        "ELITE_ROLE_NAME": role_name,
+        "OWNER_USER_ID": owner_id,
     }
-    for old, new in replacements.items():
-        template = template.replace(old, new)
-    ENV_PATH.write_text(template, encoding="utf-8")
+    lines = []
+    for line in template.splitlines():
+        key, separator, _ = line.partition("=")
+        if separator and key.strip() in values:
+            line = f"{key.strip()}={values[key.strip()]}"
+        lines.append(line)
+    ENV_PATH.write_text("\n".join(lines) + "\n", encoding="utf-8")
     try:
         ENV_PATH.chmod(0o600)
     except OSError:

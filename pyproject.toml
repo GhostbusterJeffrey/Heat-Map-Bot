@@ -12,6 +12,7 @@ dependencies = [
   "matplotlib>=3.10,<4.0",
   "python-dotenv>=1.1,<2.0",
   "pillow>=11,<13",
+  "tzdata>=2025.1",
 ]
 
 [project.scripts]

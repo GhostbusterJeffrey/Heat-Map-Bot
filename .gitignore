@@ -1,0 +1,15 @@
+.venv/
+.venv-tpr/
+__pycache__/
+*.pyc
+.env
+.env.*
+!.env.example
+data/*.collector.lock
+data/*.collector-state.json
+data/*.collector-state.tmp
+.DS_Store
+logs/*.log
+data/*.sqlite3
+data/*.sqlite3-shm
+data/*.sqlite3-wal

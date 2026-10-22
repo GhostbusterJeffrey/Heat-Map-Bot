@@ -1,0 +1,23 @@
+{
+  "build": "TPR /netimpact \u2014 20-ticker near-term development build",
+  "session_preview": "2026-10-21",
+  "tests": {
+    "passed": 113,
+    "subtests_passed": 19,
+    "lint": "passed"
+  },
+  "actual_command_callback": "tested locally with captured response; no Discord message sent",
+  "source_snapshots": {
+    "tickers": 20,
+    "contracts": 440,
+    "provider": "Tradier production"
+  },
+  "independent_close_estimate_reconciliation": "20/20 ticker totals matched Decimal recomputation",
+  "historical_tick_probe": "price/time/volume available; contemporaneous bid/ask missing",
+  "pending": [
+    "Live options execution fields and timing",
+    "440-contract streaming completeness and load",
+    "Provider permission for shared redistribution",
+    "Deployment and always-on collector startup"
+  ]
+}

@@ -6,3 +6,11 @@ services:
     volumes:
       - ./assets:/app/assets:ro
       - ./logs:/app/logs
+      - ./data:/app/data
+  netimpact-collector:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    command: ["python", "-m", "tpr_terminal.netimpact_cli", "collect"]
+    volumes:
+      - ./data:/app/data

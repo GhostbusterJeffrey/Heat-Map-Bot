@@ -1,3 +1,5 @@
+> This sanitized cloud build includes `/netimpact`. Read [CLOUD_UPDATE.md](CLOUD_UPDATE.md) before replacing server files. Keep your existing private environment configuration and persistent data.
+
 # TPR Terminal V4 Alpha 4.2 Dev.1 — Canonical Contract State Foundation
 
 Alpha 4.2 development has started without promoting candidate mathematics to

@@ -1,0 +1,17 @@
+.env
+.env.*
+.venv*
+venv
+__pycache__
+*.pyc
+.pytest_cache
+.ruff_cache
+.matplotlib-cache
+.git
+data
+data 2
+logs
+tests 2
+tpr_terminal 2
+assets 2
+outputs

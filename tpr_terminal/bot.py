@@ -17,6 +17,7 @@ from discord.ext import commands
 from . import __version__
 from .cache import TTLCache
 from .models import AnalysisResult, ContractGreekReport, RenderedHeatmap
+from .netimpact_service import NetImpactService
 from .service import TerminalService
 from .settings import Settings
 from .snapshot_store import OIComparison
@@ -54,6 +55,7 @@ class TPRTerminalBot(commands.Bot):
         self.settings = settings
         self.started_at = time.monotonic()
         self.service = TerminalService(settings)
+        self.netimpact_service: NetImpactService | None = None
         self.analysis_executor = ThreadPoolExecutor(
             max_workers=settings.analysis_workers,
             thread_name_prefix="tpr-analysis",
@@ -281,6 +283,64 @@ class TerminalCog(commands.Cog):
             )
             return False
         return True
+
+    @app_commands.command(name="netimpact", description="Rank tracked near-term options by recorded net premium.")
+    @app_commands.guild_only()
+    @app_commands.checks.cooldown(
+        1, MODULE_SETTINGS.cooldown_seconds,
+        key=lambda interaction: (interaction.guild_id, interaction.user.id),
+    )
+    @app_commands.describe(
+        window="Recorded session, last 15 minutes, or last 60 minutes",
+        mode="Flow uses recorded executions; close_estimate is call/put activity with unknown trade direction",
+    )
+    async def netimpact(
+        self, interaction: discord.Interaction,
+        window: Literal["session", "15m", "60m"] = "session",
+        mode: Literal["flow", "close_estimate"] = "flow",
+    ) -> None:
+        if not await self._authorize(interaction):
+            return
+        await interaction.response.defer(thinking=True)
+        try:
+            if self.bot.netimpact_service is None:
+                self.bot.netimpact_service = NetImpactService()
+            service = self.bot.netimpact_service
+            loop = asyncio.get_running_loop()
+            async with self.bot.analysis_semaphore:
+                report = await loop.run_in_executor(
+                    self.bot.analysis_executor,
+                    lambda: service.report(window, mode),
+                )
+            async with self.bot.render_semaphore:
+                png = await loop.run_in_executor(
+                    self.bot.render_executor,
+                    lambda: service.render(report),
+                )
+            if len(png) > int(self.bot.settings.max_upload_mb * 1024 * 1024):
+                raise ValueError("Net-impact chart exceeds the configured upload limit.")
+            filename = f"tpr_netimpact_{report['session_date']}_{mode}.png"
+            estimate = mode == "close_estimate"
+            embed = discord.Embed(
+                title="TPR • Close Activity Estimate" if estimate else "TPR • Net Impact",
+                description=(
+                    "Daily call/put volume valued at final observed marks. **Trade direction is unknown; this is not signed execution flow.**"
+                    if estimate else
+                    f"{report.get('scope', '')}\nStatus: **{report.get('status', 'unknown')}**"
+                ),
+                color=0xD8B45A if estimate else 0x2DB98E,
+            )
+            embed.set_image(url=f"attachment://{filename}")
+            embed.set_footer(text=f"{report['session_date']} • {window} • Tradier • Recorded coverage only")
+            await interaction.followup.send(embed=embed, file=discord.File(io.BytesIO(png), filename=filename))
+        except Exception as exc:
+            # Never route provider/network exceptions through the generic traceback logger.
+            logger.warning("Net-impact request failed (%s)", type(exc).__name__)
+            await interaction.followup.send(
+                "Net impact is unavailable. Check the local Tradier setup and collector. "
+                "Close estimates require the current session to have closed and window:session.",
+                ephemeral=True,
+            )
 
     @app_commands.command(
         name="heatmap",
