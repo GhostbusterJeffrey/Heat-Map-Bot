@@ -774,7 +774,7 @@ class HeatmapRenderer:
         rank: int,
     ) -> tuple[str, float, float, str]:
         if side == "positive":
-            color = "#008cff"
+            color = "#ffd700"
             prefix = "P"
         elif side == "negative":
             color = "#b000ff"
